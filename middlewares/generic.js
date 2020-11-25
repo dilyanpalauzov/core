@@ -103,7 +103,7 @@ exports.errorHandler = (err, req, res, next) => {
     return errors.makeInternalError(res, err);
 };
 
-//////////////////////////////////////////////////////////////
+/// ///////////////////////////////////////////////////////////
 // GENERIC SWAGGER DEFINITION: 'tags' and example responses
 /**
  * @swagger
@@ -349,5 +349,4 @@ exports.errorHandler = (err, req, res, next) => {
  *       location: "Tallahassee, Florida"
  *       eventID: "rtctallahassee19"
  */
-//////////////////////////////////////////////////////////////
-
+/// ///////////////////////////////////////////////////////////
