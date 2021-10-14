@@ -1,5 +1,6 @@
-const superagent = require('superagent');
 const crypto = require('crypto');
+const request = require('request-promise-native');
+const config = require('../config');
 const {
     User,
     MailConfirmation,
@@ -60,7 +61,12 @@ exports.registerUser = async (req, res) => {
             payload.antenna = campaign.autojoin_body_id;
         }
 
-        await superagent.post('gsuite-wrapper:8084/accounts', payload);
+        await request({
+            url: config.gsuiteWrapper.url + ':' + config.gsuiteWrapper.port + '/accounts',
+            method: 'POST',
+            json: true,
+            body: payload
+        });
 
         const confirmation = await MailConfirmation.createForUser(user.id, t);
 

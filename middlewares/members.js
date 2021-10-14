@@ -1,8 +1,8 @@
 const moment = require('moment');
 const _ = require('lodash');
-
-const superagent = require('superagent');
+const request = require('request-promise-native');
 const crypto = require('crypto');
+const config = require('../config');
 const { User, Body, MailChange, MailConfirmation } = require('../models');
 const constants = require('../lib/constants');
 const helpers = require('../lib/helpers');
@@ -133,7 +133,13 @@ exports.updateUser = async (req, res) => {
                 familyName: req.body.last_name || req.currentUser.last_name
             }
         };
-        await superagent.put('gsuite-wrapper:8084/accounts/' + req.currentUser.gsuite_id, payload);
+
+        await request({
+            url: config.gsuiteWrapper.url + ':' + config.gsuiteWrapper.port + '/accounts/' + req.currentUser.gsuite_id,
+            method: 'PUT',
+            json: true,
+            body: payload
+        });
     }
 
     return res.json({
@@ -149,7 +155,10 @@ exports.deleteUser = async (req, res) => {
 
     // TODO: if user gets deleted the gsuite account also gets deleted (if there was an account attached)
     if (req.currentUser.gsuite_id) {
-        await superagent.delete('gsuite-wrapper:8084/accounts/' + req.currentUser.gsuite_id);
+        await request({
+            url: config.gsuiteWrapper.url + ':' + config.gsuiteWrapper.port + '/accounts/' + req.currentUser.gsuite_id,
+            method: 'DELETE'
+        });
     }
 
     await req.currentUser.destroy();
@@ -178,7 +187,12 @@ exports.setUserPassword = async (req, res) => {
         const payload = {
             password: crypto.createHash('sha1').update(JSON.stringify(req.body.password)).digest('hex')
         };
-        await superagent.put('gsuite-wrapper:8084/accounts/' + req.currentUser.gsuite_id, payload);
+        await request({
+            url: config.gsuiteWrapper.url + ':' + config.gsuiteWrapper.port + '/accounts/' + req.currentUser.gsuite_id,
+            method: 'PUT',
+            json: true,
+            body: payload
+        });
     }
 
     // TODO: add a mail that the password was changed.
@@ -217,7 +231,12 @@ exports.confirmUser = async (req, res) => {
 
     // TODO: probably move this to another method since not all MyAEGEE members should have a GSuite account
     if (req.currentUser.gsuite_id) {
-        await superagent.put('gsuite-wrapper:8084/accounts/' + req.currentUser.gsuite_id, { suspended: false });
+        await request({
+            url: config.gsuiteWrapper.url + ':' + config.gsuiteWrapper.port + '/accounts/' + req.currentUser.gsuite_id,
+            method: 'PUT',
+            json: true,
+            body: { suspended: false }
+        });
     }
 
     return res.json({
@@ -243,13 +262,35 @@ exports.setPrimaryBody = async (req, res) => {
 
         // TODO: set GSuite department to primary body
         await req.currentUser.update({ primary_body_id: body.id });
-        // await superagent.post('gsuite-wrapper:8084/accounts?DEPARTMENT')
-        // await superagent.post('gsuite-wrapper:8084/groups?DEPARTMENT')
+        // await request({
+        //     url: config.gsuiteWrapper.url + ':' + config.gsuiteWrapper.port + '/accounts?DEPARTMENT',
+        //     method: 'POST',
+        //     json: true,
+        //     body:
+        // });
+
+        // await request({
+        //     url: config.gsuiteWrapper.url + ':' + config.gsuiteWrapper.port + '/groups?DEPARTMENT',
+        //     method: 'POST',
+        //     json: true,
+        //     body:
+        // });
     } else {
         // TODO: set GSuite department to primary body
         await req.currentUser.update({ primary_body_id: null });
-        // await superagent.post('gsuite-wrapper:8084/accounts?DEPARTMENT')
-        // await superagent.post('gsuite-wrapper:8084/groups?DEPARTMENT')
+        // await request({
+        //     url: config.gsuiteWrapper.url + ':' + config.gsuiteWrapper.port + '/accounts?DEPARTMENT',
+        //     method: 'POST',
+        //     json: true,
+        //     body:
+        // });
+
+        // await request({
+        //     url: config.gsuiteWrapper.url + ':' + config.gsuiteWrapper.port + '/groups?DEPARTMENT',
+        //     method: 'POST',
+        //     json: true,
+        //     body:
+        // });
     }
 
     return res.json({
@@ -321,7 +362,12 @@ exports.confirmEmailChange = async (req, res) => {
         await mailChange.user.update({ email: mailChange.new_email }, { transaction: t });
         await mailChange.destroy({ transaction: t });
         if (req.currentUser.gsuite_id) {
-            await superagent.put('gsuite-wrapper:8084/accounts/' + req.currentUser.gsuite_id, { secondaryEmail: mailChange.new_email });
+            await request({
+                url: config.gsuiteWrapper.url + ':' + config.gsuiteWrapper.port + '/accounts/' + req.currentUser.gsuite_id,
+                method: 'PUT',
+                json: true,
+                body: { secondaryEmail: mailChange.new_email }
+            });
         }
     });
 
